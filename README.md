@@ -44,13 +44,12 @@ RawSocketMonitor was developed to highlight:
 - Only works on Windows (due to raw socket and WinForms requirements).
 - Requires administrative privileges.
 - Captures only IPv4 traffic on the specified local interface.
-- Not suitable for production use or high-throughput environments.
 
 ## License
 This sample is provided for educational purposes. You may use, modify, and distribute it freely.
 
 ## Author
-Thai Nguyen
+Thai N.
 
 ---
 Feel free to fork and improve this sample!
