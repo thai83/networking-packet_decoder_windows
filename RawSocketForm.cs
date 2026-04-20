@@ -138,7 +138,8 @@ namespace RawSocketMonitor
             }
             catch (SocketException ex)
             {
-                MessageBox.Show($"Could not create a socket with the IP address you entered.\nDetails: {ex.Message}", "Socket Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Could not create a socket with the IP address you entered.\nDetails: {ex.Message}",
+                "Socket Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             catch (Exception ex)
@@ -234,9 +235,19 @@ namespace RawSocketMonitor
                     protocolStr = "TCP";
                     payLoad = totalLength - ipHeaderLength - tcpHeaderLength;
                 }
+                else if (protocolNum == 1) // ICMP
+                {
+                    protocolStr = "ICMP";
+                    payLoad = totalLength - ipHeaderLength - 8; // ICMP header is typically 8 bytes
+                }
+                else if (protocolNum == 2) // IGMP
+                {
+                    protocolStr = "IGMP";
+                    payLoad = totalLength - ipHeaderLength - 8; // IGMP header is typically 8 bytes
+                }
                 else
                 {
-                    protocolStr = "Unknown";
+                    protocolStr = protocolNum.ToString();
                 }
 
                 // Source and destination IP addresses
