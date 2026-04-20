@@ -1,0 +1,31 @@
+# Ignore Visual Studio temporary files, build results, and
+# user-specific files
+
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Mono Auto Generated Files
+mono_crash.*
+
+# Windows image file caches
+Thumbs.db
+*.DS_Store
+
+# Visual Studio Code
+.vscode/
+
+# Others
+*.log
+*.vspscc
+*.vssscc
+
+# Rider
+.idea/
+*.sln.iml
