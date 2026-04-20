@@ -40,9 +40,9 @@ namespace RawSocketMonitor
         private MenuStrip menuStrip;
         private ToolStripMenuItem itemStart, itemStop;
 
-        ListView myList;
-
-        // ToolBar is obsolete and not used
+        private ListView myList;
+        private Label ipLabel;
+        private TextBox ipTextBox;
 
         public RawSocketForm()
         {
@@ -51,6 +51,19 @@ namespace RawSocketMonitor
                 myList = new ListView();
 
                 // Create MenuStrip and menu items
+                                // IP Address input controls
+                                ipLabel = new Label();
+                                ipLabel.Text = "Local IPv4:";
+                                ipLabel.Location = new Point(10, 24);
+                                ipLabel.Size = new Size(70, 20);
+
+                                ipTextBox = new TextBox();
+                                ipTextBox.Location = new Point(85, 22);
+                                ipTextBox.Size = new Size(120, 24);
+                                ipTextBox.Text = "127.0.0.1"; // Default value, user can change
+
+                                Controls.Add(ipLabel);
+                                Controls.Add(ipTextBox);
                 menuStrip = new MenuStrip();
                 var fileMenu = new ToolStripMenuItem("&File");
                 var viewMenu = new ToolStripMenuItem("&View");
@@ -63,7 +76,7 @@ namespace RawSocketMonitor
                 itemStop.Checked = true;
                 fileMenu.DropDownItems.Add(itemStop);
 
-                var itemExit = new ToolStripMenuItem("E&xit", null, this.close, Keys.Control | Keys.X);
+                var itemExit = new ToolStripMenuItem("E&xit", null, this.Close, Keys.Control | Keys.X);
                 fileMenu.DropDownItems.Add(itemExit);
 
                 menuStrip.Items.Add(fileMenu);
@@ -90,7 +103,7 @@ namespace RawSocketMonitor
                 myList.Columns.Add("Packet Length", -2, HorizontalAlignment.Left);
                 myList.Columns.Add("PayLoad", -2, HorizontalAlignment.Left);
                 myList.Size = new Size(550, 300);
-                myList.Location = new Point(0, 44); // below menu
+                myList.Location = new Point(0, 54); // below menu and IP input
                 Controls.Add(myList);
             }
             catch (Exception ex)
@@ -106,17 +119,27 @@ namespace RawSocketMonitor
         public void Start(object sender, EventArgs e)
         {
             if (myThread != null) return;
+            string ipInput = ipTextBox.Text.Trim();
+            if (!System.Net.IPAddress.TryParse(ipInput, out var ipAddr) || ipAddr.AddressFamily != AddressFamily.InterNetwork)
+            {
+                MessageBox.Show("Please enter a valid IPv4 address.", "Invalid IP", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             try
             {
                 // (Re)create and bind the socket
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP);
-                string IPString = "192.168.1.233";
-                socket.Bind(new IPEndPoint(IPAddress.Parse(IPString), 5000));
+                socket.Bind(new IPEndPoint(ipAddr, 5000));
                 socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.HeaderIncluded, 1);
                 byte[] IN = new byte[4] { 1, 0, 0, 0 };
                 byte[] OUT = new byte[4];
                 int SIO_RCVALL = unchecked((int)0x98000001);
                 int ret_code = socket.IOControl(SIO_RCVALL, IN, OUT);
+            }
+            catch (SocketException ex)
+            {
+                MessageBox.Show($"Could not create a socket with the IP address you entered.\nDetails: {ex.Message}", "Socket Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             catch (Exception ex)
             {
@@ -148,11 +171,9 @@ namespace RawSocketMonitor
             }
         }
 
-        public void close(object sender, EventArgs e)
+        public void Close(object sender, EventArgs e)
         {
-
             this.Close();
-
         }
 
         public void ShutDown(object sender, EventArgs e)
@@ -178,7 +199,7 @@ namespace RawSocketMonitor
         /// <summary>
         /// Convert a short from network order to little endian order.
         /// </summary>
-        public ushort ntohs(int offset)
+        public ushort Ntohs(int offset)
         {
             uint temp1 = bytes[offset];
             uint temp2 = bytes[offset + 1];
@@ -196,7 +217,7 @@ namespace RawSocketMonitor
             {
                 // Extract IP header fields
                 byte protocolNum = buffer[9];
-                ushort totalLength = ntohs(2);
+                ushort totalLength = Ntohs(2);
                 uint ipHeaderLength = (uint)((buffer[0] & 0x0F) * 4);
                 uint tcpHeaderLength = (uint)((buffer[ipHeaderLength + 12] >> 4) * 4);
                 uint payLoad = 0;
@@ -223,8 +244,8 @@ namespace RawSocketMonitor
                 string destStr = $"{buffer[16]}.{buffer[17]}.{buffer[18]}.{buffer[19]}";
 
                 // Source and destination ports
-                ushort sourcePort = ntohs((ushort)ipHeaderLength);
-                ushort destPort = ntohs((ushort)ipHeaderLength + 2);
+                ushort sourcePort = Ntohs((ushort)ipHeaderLength);
+                ushort destPort = Ntohs((ushort)ipHeaderLength + 2);
 
                 // Application protocol detection
                 string appProtocol = "";
