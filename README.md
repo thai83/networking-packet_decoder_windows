@@ -7,9 +7,7 @@ This project was created as a demonstration of my skills in low-level networking
 
 ## Why this project?
 RawSocketMonitor was developed to highlight:
-- Proficiency with the .NET networking stack and socket programming
-- Experience with Windows Forms and UI design
-- Safe use of multithreading for responsive applications
+- Knowledge of TCP/IP networking and socket programming
 - Protocol parsing and real-time data display
 
 ## Features
@@ -45,11 +43,6 @@ RawSocketMonitor was developed to highlight:
 - Requires administrative privileges.
 - Captures only IPv4 traffic on the specified local interface.
 
-## License
-This sample is provided for educational purposes. You may use, modify, and distribute it freely.
-
 ## Author
 Thai N.
 
----
-Feel free to fork and improve this sample!
