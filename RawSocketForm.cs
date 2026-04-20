@@ -77,7 +77,6 @@ namespace RawSocketMonitor
                 CenterToScreen();
                 this.BackColor = Color.LightSteelBlue;
                 this.FormClosed += new FormClosedEventHandler(ShutDown);
-                // Socket is now created in Start, so doSocket is not needed
 
                 // Set to details view.
                 myList.View = View.Details;
@@ -86,8 +85,8 @@ namespace RawSocketMonitor
                 myList.Columns.Add("Dest Addr", -2, HorizontalAlignment.Left);
                 myList.Columns.Add("Source Port", -2, HorizontalAlignment.Left);
                 myList.Columns.Add("Dest Port", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("TProtocol", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("AProtocol", -2, HorizontalAlignment.Left);
+                myList.Columns.Add("Transport Protocol", -2, HorizontalAlignment.Left);
+                myList.Columns.Add("Application Protocol", -2, HorizontalAlignment.Left);
                 myList.Columns.Add("Packet Length", -2, HorizontalAlignment.Left);
                 myList.Columns.Add("PayLoad", -2, HorizontalAlignment.Left);
                 myList.Size = new Size(550, 300);
@@ -125,7 +124,7 @@ namespace RawSocketMonitor
                 return;
             }
             cancelTokenSource = new System.Threading.CancellationTokenSource();
-            myThread = new Thread(() => doPacket(cancelTokenSource.Token));
+            myThread = new Thread(() => DoPacket(cancelTokenSource.Token));
             myThread.Start();
             itemStart.Checked = true;
             itemStop.Checked = false;
@@ -256,8 +255,7 @@ namespace RawSocketMonitor
             }
         }
 
-        // Corrected doPacket method with CancellationToken
-        public void doPacket(System.Threading.CancellationToken token)
+        public void DoPacket(System.Threading.CancellationToken token)
         {
             try
             {
@@ -277,8 +275,5 @@ namespace RawSocketMonitor
                 // Socket closed, exit thread
             }
         }
-
-        // doSocket is no longer needed, as socket creation is handled in start
-        public void doSocket(object sender, EventArgs e) { }
     }
 }
