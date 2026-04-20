@@ -39,10 +39,11 @@ namespace RawSocketMonitor
 
         private MenuStrip menuStrip;
         private ToolStripMenuItem itemStart, itemStop;
+        private Label statusLabel;
 
         private ListView myList;
         private Label ipLabel;
-        private TextBox ipTextBox;
+        private ComboBox ipComboBox;
 
         public RawSocketForm()
         {
@@ -51,19 +52,40 @@ namespace RawSocketMonitor
                 myList = new ListView();
 
                 // Create MenuStrip and menu items
-                                // IP Address input controls
-                                ipLabel = new Label();
-                                ipLabel.Text = "Local IPv4:";
-                                ipLabel.Location = new Point(10, 24);
-                                ipLabel.Size = new Size(70, 20);
+                // IP Address input controls
+                ipLabel = new Label();
+                ipLabel.Text = "Local IPv4:";
+                ipLabel.Location = new Point(10, 24);
+                ipLabel.Size = new Size(70, 20);
 
-                                ipTextBox = new TextBox();
-                                ipTextBox.Location = new Point(85, 22);
-                                ipTextBox.Size = new Size(120, 24);
-                                ipTextBox.Text = "127.0.0.1"; // Default value, user can change
+                ipComboBox = new ComboBox();
+                ipComboBox.Location = new Point(85, 22);
+                ipComboBox.Size = new Size(150, 24);
+                ipComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
-                                Controls.Add(ipLabel);
-                                Controls.Add(ipTextBox);
+                // Populate with all local IPv4 addresses
+                var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        ipComboBox.Items.Add(ip.ToString());
+                }
+                // Always add loopback as an option
+                if (!ipComboBox.Items.Contains("127.0.0.1"))
+                    ipComboBox.Items.Add("127.0.0.1");
+                if (ipComboBox.Items.Count > 0)
+                    ipComboBox.SelectedIndex = 0;
+
+                Controls.Add(ipLabel);
+                Controls.Add(ipComboBox);
+
+                // Status label
+                statusLabel = new Label();
+                statusLabel.Text = "Stopped";
+                statusLabel.Location = new Point(250, 24);
+                statusLabel.Size = new Size(120, 20);
+                statusLabel.ForeColor = Color.DarkRed;
+                Controls.Add(statusLabel);
                 menuStrip = new MenuStrip();
                 var fileMenu = new ToolStripMenuItem("&File");
                 var viewMenu = new ToolStripMenuItem("&View");
@@ -119,7 +141,11 @@ namespace RawSocketMonitor
         public void Start(object sender, EventArgs e)
         {
             if (myThread != null) return;
-            string ipInput = ipTextBox.Text.Trim();
+            itemStart.Enabled = false;
+            itemStop.Enabled = true;
+            statusLabel.Text = "Capturing...";
+            statusLabel.ForeColor = Color.DarkGreen;
+            string ipInput = ipComboBox.SelectedItem?.ToString() ?? "";
             if (!System.Net.IPAddress.TryParse(ipInput, out var ipAddr) || ipAddr.AddressFamily != AddressFamily.InterNetwork)
             {
                 MessageBox.Show("Please enter a valid IPv4 address.", "Invalid IP", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -169,12 +195,17 @@ namespace RawSocketMonitor
                 cancelTokenSource = null;
                 itemStop.Checked = true;
                 itemStart.Checked = false;
+                itemStart.Enabled = true;
+                itemStop.Enabled = false;
+                statusLabel.Text = "Stopped";
+                statusLabel.ForeColor = Color.DarkRed;
             }
         }
 
         public void Close(object sender, EventArgs e)
         {
             this.Close();
+            // Optionally update status label if needed
         }
 
         public void ShutDown(object sender, EventArgs e)
@@ -190,11 +221,25 @@ namespace RawSocketMonitor
                 myThread = null;
                 cancelTokenSource.Dispose();
                 cancelTokenSource = null;
+                itemStart.Enabled = true;
+                itemStop.Enabled = false;
+                statusLabel.Text = "Stopped";
+                statusLabel.ForeColor = Color.DarkRed;
             }
             else if (socket != null)
             {
                 try { socket.Close(); } catch { }
             }
+        }
+
+        // Ensure initial button states
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            itemStart.Enabled = true;
+            itemStop.Enabled = false;
+            statusLabel.Text = "Stopped";
+            statusLabel.ForeColor = Color.DarkRed;
         }
 
         /// <summary>
@@ -244,6 +289,11 @@ namespace RawSocketMonitor
                 {
                     protocolStr = "IGMP";
                     payLoad = totalLength - ipHeaderLength - 8; // IGMP header is typically 8 bytes
+                }
+                else if (protocolNum == 89) // OSPF
+                {
+                    protocolStr = "OSPF";
+                    payLoad = totalLength - ipHeaderLength - 24; // OSPF header is typically 24 bytes
                 }
                 else
                 {
