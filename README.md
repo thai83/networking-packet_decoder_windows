@@ -29,7 +29,7 @@ RawSocketMonitor was developed to highlight:
 2. **Run as Administrator:**
    - Raw sockets require admin rights. Right-click the executable and select "Run as administrator," or launch your terminal as admin before running `dotnet run`.
 3. **Start/Stop Capture:**
-   - Enter the IP address of the active network interface (Wifi or Ethernet).
+   - Select an IP address from the dropdown list (Wifi or Ethernet).
    - Use the File menu to start or stop packet capture.
    - Captured packets will appear in the list view.
 
