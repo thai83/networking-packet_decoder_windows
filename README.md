@@ -11,7 +11,7 @@ RawSocketMonitor was developed to highlight:
 - Protocol parsing and real-time data display
 
 ## Features
-- Captures TCP and UDP packets using a raw socket
+- Captures TCP, UDP, ICMP packets, and others using a raw socket
 - Displays source/destination IP addresses and ports
 - Identifies common application protocols by port
 - Multi-threaded packet capture for UI responsiveness
