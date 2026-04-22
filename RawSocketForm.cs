@@ -20,7 +20,7 @@ namespace RawSocketMonitor
         Socket socket;
 
         // Background thread for packet processing
-        Thread myThread;
+        Thread thread;
         System.Threading.CancellationTokenSource cancelTokenSource;
 
         // Protocol/port mapping for application protocol detection
@@ -41,7 +41,7 @@ namespace RawSocketMonitor
         private ToolStripMenuItem itemStart, itemStop;
         private Label statusLabel;
 
-        private ListView myList;
+        private ListView list;
         private Label ipLabel;
         private ComboBox ipComboBox;
 
@@ -49,7 +49,7 @@ namespace RawSocketMonitor
         {
             try
             {
-                myList = new ListView();
+                list = new ListView();
 
                 // Create MenuStrip and menu items
                 // IP Address input controls
@@ -114,19 +114,19 @@ namespace RawSocketMonitor
                 this.FormClosed += new FormClosedEventHandler(ShutDown);
 
                 // Set to details view.
-                myList.View = View.Details;
-                myList.Anchor = AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left;
-                myList.Columns.Add("Source Addr", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("Dest Addr", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("Source Port", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("Dest Port", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("Transport Protocol", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("Application Protocol", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("Packet Length", -2, HorizontalAlignment.Left);
-                myList.Columns.Add("PayLoad", -2, HorizontalAlignment.Left);
-                myList.Size = new Size(550, 300);
-                myList.Location = new Point(0, 54); // below menu and IP input
-                Controls.Add(myList);
+                list.View = View.Details;
+                list.Anchor = AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Left;
+                list.Columns.Add("Source Addr", -2, HorizontalAlignment.Left);
+                list.Columns.Add("Dest Addr", -2, HorizontalAlignment.Left);
+                list.Columns.Add("Source Port", -2, HorizontalAlignment.Left);
+                list.Columns.Add("Dest Port", -2, HorizontalAlignment.Left);
+                list.Columns.Add("Transport Protocol", -2, HorizontalAlignment.Left);
+                list.Columns.Add("Application Protocol", -2, HorizontalAlignment.Left);
+                list.Columns.Add("Packet Length", -2, HorizontalAlignment.Left);
+                list.Columns.Add("PayLoad", -2, HorizontalAlignment.Left);
+                list.Size = new Size(550, 300);
+                list.Location = new Point(0, 54); // below menu and IP input
+                Controls.Add(list);
             }
             catch (Exception ex)
             {
@@ -140,7 +140,7 @@ namespace RawSocketMonitor
 
         public void Start(object sender, EventArgs e)
         {
-            if (myThread != null) return;
+            if (thread != null) return;
             itemStart.Enabled = false;
             itemStop.Enabled = true;
             statusLabel.Text = "Capturing...";
@@ -174,23 +174,23 @@ namespace RawSocketMonitor
                 return;
             }
             cancelTokenSource = new System.Threading.CancellationTokenSource();
-            myThread = new Thread(() => DoPacket(cancelTokenSource.Token));
-            myThread.Start();
+            thread = new Thread(() => DoPacket(cancelTokenSource.Token));
+            thread.Start();
             itemStart.Checked = true;
             itemStop.Checked = false;
         }
 
         public void Stop(object sender, EventArgs e)
         {
-            if (myThread != null && cancelTokenSource != null)
+            if (thread != null && cancelTokenSource != null)
             {
                 cancelTokenSource.Cancel();
                 if (socket != null)
                 {
                     try { socket.Close(); } catch { }
                 }
-                myThread.Join();
-                myThread = null;
+                thread.Join();
+                thread = null;
                 cancelTokenSource.Dispose();
                 cancelTokenSource = null;
                 itemStop.Checked = true;
@@ -210,15 +210,15 @@ namespace RawSocketMonitor
 
         public void ShutDown(object sender, EventArgs e)
         {
-            if (myThread != null && cancelTokenSource != null)
+            if (thread != null && cancelTokenSource != null)
             {
                 cancelTokenSource.Cancel();
                 if (socket != null)
                 {
                     try { socket.Close(); } catch { }
                 }
-                myThread.Join();
-                myThread = null;
+                thread.Join();
+                thread = null;
                 cancelTokenSource.Dispose();
                 cancelTokenSource = null;
                 itemStart.Enabled = true;
@@ -325,10 +325,10 @@ namespace RawSocketMonitor
                 listItem.SubItems.Add(totalLength.ToString());
                 listItem.SubItems.Add(payLoad.ToString());
 
-                if (myList.InvokeRequired)
-                    myList.Invoke(new Action(() => myList.Items.Add(listItem)));
+                if (list.InvokeRequired)
+                    list.Invoke(new Action(() => list.Items.Add(listItem)));
                 else
-                    myList.Items.Add(listItem);
+                    list.Items.Add(listItem);
             }
             catch (Exception ex)
             {
